@@ -7,7 +7,8 @@ const Form = () => {
   const [message, setMessage] = createSignal("");
   const [status, setStatus] = createSignal<{ text: string; kind: "ok" | "error" | "warn" } | null>(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SubmitEvent) => {
+
     e.preventDefault();
     setStatus(null);
 
