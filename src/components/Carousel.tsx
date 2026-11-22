@@ -1,10 +1,23 @@
 import { For, onMount, onCleanup } from "solid-js";
 
-const Carousel = (props) => {
+type CarouselItem = {
+  image: string;
+  name: string;
+  artist: string;
+  meta: string;
+};
+
+type CarouselProps = {
+  items: CarouselItem[];
+  direction: "left" | "right";
+  title: string;
+};
+
+const Carousel = (props: CarouselProps) => {
   const items = () => [...props.items, ...props.items];
   const dir = () => (props.direction === "right" ? 1 : -1);
 
-  let trackRef;
+  let trackRef: HTMLDivElement | undefined;
   let offset = 0;
   let frame = 0;
 
@@ -39,7 +52,10 @@ const Carousel = (props) => {
 
         const secondHalfStart = trackRef.children[props.items.length];
         if (secondHalfStart) {
-          const half = secondHalfStart.offsetLeft;
+          const half = secondHalfStart instanceof HTMLElement
+            ? secondHalfStart.offsetLeft
+            : 0;
+
           if (half > 0) {
             if (-offset >= half) offset += half;
             if (offset > 0) offset -= half;
@@ -56,7 +72,7 @@ const Carousel = (props) => {
 
   onCleanup(() => cancelAnimationFrame(frame));
 
-  const onPointerDown = (e) => {
+  const onPointerDown = (e: PointerEvent) => {
     isDragging = true;
     startX = e.clientX;
     startOffset = offset;
@@ -66,7 +82,7 @@ const Carousel = (props) => {
     axis = "unknown";
   };
 
-  const onPointerMove = (e) => {
+  const onPointerMove = (e: PointerEvent) => {
     if (!isDragging) return;
 
     const dx = e.clientX - startX;
@@ -74,7 +90,7 @@ const Carousel = (props) => {
     if (axis === "unknown") {
       if (Math.abs(dx) > AXIS_THRESHOLD) {
         axis = "x";
-        e.currentTarget.setPointerCapture(e.pointerId);
+        (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
       } else {
         return;
       }
@@ -94,7 +110,7 @@ const Carousel = (props) => {
     lastTime = now;
   };
 
-  const onPointerUp = (e) => {
+  const onPointerUp = (e: PointerEvent) => {
     if (!isDragging) return;
     isDragging = false;
 
@@ -102,9 +118,12 @@ const Carousel = (props) => {
       const boosted = dragVelocity * VELOCITY_BOOST;
       const clamped = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, boosted));
       currentSpeed = -clamped;
+
       try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {}
+        (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+      } catch {
+        // Pointer capture мог быть уже снят.
+      }
     }
     axis = "unknown";
   };
