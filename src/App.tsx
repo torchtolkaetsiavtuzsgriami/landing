@@ -1,4 +1,3 @@
-import { createResource } from "solid-js";
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Carousel from './components/Carousel';
